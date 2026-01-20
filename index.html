@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>PROGRES:BEAT // INDUSTRIAL_CORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #c70039; --secondary: #2196f3; --success: #4caf50; --bg: #000; --font-stencil: 'Black Ops One'; --font-mono: 'JetBrains Mono'; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg); color: #fff; font-family: var(--font-stencil); height: 100vh; width: 100vw; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+        /* --- INTRO Z KONSOLĄ --- */
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #console-loader { font-family: var(--font-mono); color: var(--primary); font-size: 0.8rem; margin-bottom: 20px; height: 100px; width: 400px; text-align: left; overflow: hidden; }
+        #load-bar { width: 400px; height: 4px; background: #111; border: 1px solid #222; position: relative; }
+        #load-fill { width: 0%; height: 100%; background: var(--primary); animation: fill 4s ease-in-out forwards; }
+        @keyframes fill { 0% { width: 0%; } 100% { width: 100%; } }
+
+        /* --- ANIMACJA OTWARCIA RAMKI --- */
+        #ui-frame { 
+            width: 95%; max-width: 1100px; height: 750px; 
+            border: 2px solid #333; position: relative; padding: 60px; 
+            background: #000; display: none; opacity: 0;
+            box-shadow: 0 0 50px rgba(199, 0, 57, 0.1); 
+            transition: opacity 0.5s ease;
+        }
+        .corner { position: absolute; width: 60px; height: 60px; border: 4px solid var(--primary); transition: all 1s cubic-bezier(0.19, 1, 0.22, 1); }
+        /* Pozycje startowe (na środku) */
+        .tl { top: calc(50% - 30px); left: calc(50% - 30px); border-right: 0; border-bottom: 0; }
+        .br { bottom: calc(50% - 30px); right: calc(50% - 30px); border-left: 0; border-top: 0; }
+        /* Klasa aktywująca rozsunięcie */
+        .expanded.tl { top: -4px; left: -4px; }
+        .expanded.br { bottom: -4px; right: -4px; }
+
+        .view { display: none; height: 100%; width: 100%; flex-direction: column; justify-content: flex-start; align-items: flex-start; text-align: left; }
+        .view.active { display: flex; }
+
+        header { margin-bottom: 40px; border-left: 12px solid var(--primary); padding-left: 25px; width: 100%; }
+        .tag { font-family: var(--font-mono); color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 5px; }
+        h1 { font-size: 3.2rem; text-transform: uppercase; letter-spacing: 2px; }
+
+        .menu-list { list-style: none; margin-top: 20px; }
+        .menu-item { font-size: 2.5rem; margin: 20px 0; color: #222; transition: 0.2s; cursor: pointer; }
+        .menu-item:hover { color: #fff; padding-left: 20px; }
+        .menu-item.connected { color: var(--success) !important; text-shadow: 0 0 15px var(--success); }
+
+        .modes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; margin-top: 10px; }
+        .mode-card { background: #050505; border: 1px solid #222; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .mode-card h3 { font-size: 1.3rem; border-bottom: 1px solid #222; padding-bottom: 10px; color: #fff; }
+        
+        input[type="color"] { width: 100%; height: 40px; background: none; border: 1px solid #333; cursor: pointer; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); background: #111; cursor: pointer; }
+
+        .action-btn { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 12px; cursor: pointer; font-family: var(--font-stencil); text-transform: uppercase; font-size: 0.9rem; }
+        .action-btn:hover { background: var(--primary); color: white; }
+        
+        .stop-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; font-family: var(--font-stencil); cursor: pointer; font-size: 1.2rem; margin-top: 30px; }
+
+        .back-link { margin-top: auto; color: var(--primary); cursor: pointer; text-transform: uppercase; font-size: 1.1rem; }
+        .info-text { font-family: var(--font-mono); color: #888; line-height: 1.6; font-size: 0.85rem; width: 100%; }
+        .spec-list { color: var(--secondary); margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div id="console-loader"></div>
+        <div id="load-bar"><div id="load-fill"></div></div>
+    </div>
+
+    <div id="ui-frame">
+        <div class="corner tl" id="c-tl"></div><div class="corner br" id="c-br"></div>
+
+        <div id="v-main" class="view active">
+            <header><div class="tag" id="status-tag">UNIT_11 // DISCONNECTED</div><h1>MENU_GŁÓWNE</h1></header>
+            <ul class="menu-list">
+                <li class="menu-item" id="btn-conn" onclick="initConnect()">01. POŁĄCZ URZĄDZENIE</li>
+                <li class="menu-item" onclick="showV('v-modes')">02. TRYBY PRACY</li>
+                <li class="menu-item" onclick="showV('v-about')">03. O PROJEKCIE</li>
+            </ul>
+        </div>
+
+        <div id="v-modes" class="view">
+            <header><h1>PANEL_KONTROLNY</h1></header>
+            <div class="modes-grid">
+                <div class="mode-card"><h3>EQUALIZER</h3><input type="color" id="eq-color" value="#2196f3" oninput="updateColors(this.value)"><button class="action-btn" onclick="startEqualizer()">AKTYWACJA SYNC</button></div>
+                <div class="mode-card"><h3>ŁADOWANIE</h3><input type="color" id="load-color" value="#c70039" oninput="updateColors(this.value)"><input type="range" min="1" max="100" value="50" oninput="updateSpeed(this.value)"><div class="tag">RAINBOW: <input type="checkbox" onchange="toggleRainbow(this.checked)"></div><button class="action-btn" onclick="sendCommand('L')">AKTYWACJA COMET</button></div>
+                <div class="mode-card"><h3>TIMER</h3><div class="tag">CZAS: <span id="t-val">25</span> MIN</div><input type="range" id="timer-val" min="1" max="60" value="25" oninput="document.getElementById('t-val').innerText=this.value"><button class="action-btn" onclick="startTimer()">START TIMER</button></div>
+            </div>
+            <button class="stop-btn" onclick="stopAll()">DEAKTYWACJA SYSTEMU</button>
+            <p class="back-link" onclick="showV('v-main')">« POWRÓT</p>
+        </div>
+
+        <div id="v-about" class="view">
+            <header><h1>O PROJEKCIE</h1></header>
+            <div class="info-text">
+                <div class="spec-list">
+                    [SPRZĘT]: ARDUINO UNO R3 // BT 5.0 BLE // 11 PIXEL RING (GRB)<br>
+                    [ARCHITEKTURA]: HYBRID REAL-TIME ENGINE V3.0 // AUDIO WORKLET SYNC<br>
+                    [PINOUT]: BUZZER D2 // LED D3 // STATE D4 // RXD D10 // TXD D9
+                </div>
+                PROGRES:BEAT TO ZAAWANSOWANY SYSTEM KONTROLI SKUPIENIA I WIZUALIZACJI CYFROWEJ.<br><br>
+                OFERUJE:<br>
+                - SYNC_EQ: BEZOPÓŹNIENIOWY EQUALIZER DZIAŁAJĄCY W TLE SYSTEMU.<br>
+                - COMET_CORE: PŁYNNA ANIMACJA ŁADOWANIA Z ANTYALIAZINGIEM I TRYBEM RAINBOW.<br>
+                - FOCUS_TIMER: WIZUALNY GRADIENT CZASU POMAGAJĄCY W TECHNICE POMODORO.<br>
+                - AUTO_DETECT: AUTOMATYCZNE WYKRYWANIE STANU ZASILANIA I ŁĄCZA BT.
+            </div>
+            <p class="back-link" onclick="showV('v-main')">« POWRÓT</p>
+        </div>
+    </div>
+
+    <script>
+        let bleDevice, bleChar, audioCtx, analyser, dataArr, scriptProcessor;
+
+        // --- KONSTRUKCJA LOGÓW ŁADOWANIA ---
+        const logs = [
+            "> INICJALIZACJA KERNEL...", "> LOADING UNIT_11 STACK...", "> MOUNTING BLUETOOTH_API...",
+            "> CHECKING LED_RING_11...", "> CALIBRATING AUDIO_WORKLET...", "> SYSTEM READY."
+        ];
+        let logIdx = 0;
+        const consoleEl = document.getElementById('console-loader');
+        const logInt = setInterval(() => {
+            if(logIdx < logs.length) {
+                consoleEl.innerHTML += logs[logIdx] + "<br>";
+                logIdx++;
+            } else clearInterval(logInt);
+        }, 600);
+
+        // --- ANIMACJA OTWARCIA ---
+        setTimeout(() => {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                const frame = document.getElementById('ui-frame');
+                frame.style.display = 'block';
+                setTimeout(() => {
+                    frame.style.opacity = '1';
+                    document.getElementById('c-tl').classList.add('expanded');
+                    document.getElementById('c-br').classList.add('expanded');
+                }, 100);
+            }, 500);
+        }, 4200);
+
+        function showV(id) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+        async function initConnect() {
+            try {
+                bleDevice = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] });
+                bleDevice.addEventListener('gattserverdisconnected', () => {
+                    bleChar = null; document.getElementById('btn-conn').classList.remove('connected');
+                    document.getElementById('status-tag').innerText = "UNIT_11 // DISCONNECTED";
+                });
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+                bleChar = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+                document.getElementById('btn-conn').classList.add('connected');
+                document.getElementById('status-tag').innerText = "UNIT_11 // OPERATIONAL";
+                document.getElementById('status-tag').style.color = "var(--success)";
+                sendCommand('C');
+            } catch (e) { console.log(e); }
+        }
+
+        async function sendCommand(cmd) { if(bleChar) { try { await bleChar.writeValue(new TextEncoder().encode(cmd + "\n")); } catch(e) {} } }
+        function stopAll() { if(scriptProcessor) scriptProcessor.onaudioprocess = null; sendCommand('S'); }
+        function updateColors(v) { sendCommand('K' + v); }
+        function updateSpeed(v) { document.getElementById('s-val').innerText = v; sendCommand('P' + v); }
+        function toggleRainbow(c) { sendCommand(c ? 'R1' : 'R0'); }
+
+        async function startEqualizer() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { systemAudio: "include" } });
+                const source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 64; analyser.smoothingTimeConstant = 0.3;
+                dataArr = new Uint8Array(analyser.frequencyBinCount);
+                scriptProcessor = audioCtx.createScriptProcessor(2048, 1, 1);
+                source.connect(analyser); analyser.connect(scriptProcessor); scriptProcessor.connect(audioCtx.destination);
+            }
+            sendCommand('E');
+            let lastLevel = -1;
+            scriptProcessor.onaudioprocess = function() {
+                if(!bleChar) return;
+                analyser.getByteFrequencyData(dataArr);
+                let avg = 0; for(let i=0; i<dataArr.length; i++) avg += dataArr[i]; avg /= dataArr.length;
+                let level = Math.floor((avg/255)*11*1.7); if(level > 11) level = 11;
+                if(level !== lastLevel) { sendCommand('V' + level); lastLevel = level; }
+            };
+        }
+
+        function startTimer() { sendCommand('T' + document.getElementById('timer-val').value + 'B'); }
+    </script>
+</body>
+</html>
