@@ -58,7 +58,7 @@ The artifact utilizes a specific color-coding system for data representation:
 
 ## 4. FIRMWARE SOURCE CODE (V3.0)
 
-[Image of Arduino Uno with WS2812B LED ring and Bluetooth module wiring diagram]
+
 
 ```cpp
 /*
@@ -76,4 +76,48 @@ The artifact utilizes a specific color-coding system for data representation:
 #define NUMPIXELS  11
 
 Adafruit_NeoPixel pixels(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
-SoftwareSerial BTSerial(BT_RX, BT_TX
+SoftwareSerial BTSerial(BT_RX, BT_TX);
+
+void setup() {
+  pixels.begin();
+  pixels.setBrightness(40);
+  pinMode(BUZZER_PIN, OUTPUT);
+  BTSerial.begin(9600);
+  
+  // Power-on Self Test (POST)
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(50);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+void loop() {
+  if (BTSerial.available() > 0) {
+    char cmd = BTSerial.read();
+    
+    if (cmd == 'V') {
+      int level = BTSerial.parseInt();
+      updateRing(level);
+    } else if (cmd == 'L') {
+      loadingAnimation();
+    }
+  }
+}
+
+void updateRing(int n) {
+  pixels.clear();
+  for(int i=0; i<n; i++) {
+    pixels.setPixelColor(i, pixels.Color(0, 150, 255)); // Cyber Blue
+  }
+  pixels.show();
+}
+
+void loadingAnimation() {
+  for(int j=0; j<3; j++) {
+    for(int i=0; i<NUMPIXELS; i++) {
+      pixels.clear();
+      pixels.setPixelColor(i, pixels.Color(224, 224, 224)); // Terminal White
+      pixels.show();
+      delay(60);
+    }
+  }
+}
