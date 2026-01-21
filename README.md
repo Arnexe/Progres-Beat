@@ -77,7 +77,7 @@
 
 
 ## 2. MECHANICAL SYSTEM & ASSEMBLY
-Visual representation of the artifact's internal architecture and component integration process.
+Visual representation of the working unit
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/747feefc-0242-4ba7-b9c1-51e2ce1e19cb" width="600" alt="Mechanical Assembly Visualizer">
