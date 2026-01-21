@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" width="350" alt="PROGRES:BEAT IDENTIFIER">
+  <img src="logo.png" width="400" alt="PROGRES:BEAT // UNIT_11">
 </p>
 
 # PROGRES:BEAT // UNIT_11
@@ -9,98 +9,71 @@
 ![Hardware](https://img.shields.io/badge/HARDWARE-ARDUINO_UNO-blue?style=for-the-badge)
 ![Interface](https://img.shields.io/badge/INTERFACE-WEB_BLUETOOTH-red?style=for-the-badge)
 
-> **PROGRES:BEAT** is a specialized hardware-software bridge designed for "Deep Work" environments. It serves as a physical artifact for system telemetry and audio visualization, utilizing a low-latency Web Bluetooth protocol to drive an 11-pixel LED ring array.
+> **PROGRES:BEAT** is a specialized hardware-software artifact designed for "Deep Work" environments. It functions as a standalone industrial-grade visualizer and processing indicator, driven by a low-latency Web Bluetooth protocol to an 11-pixel LED ring array.
 
 ---
 
-## 1. SYSTEM SPECIFICATIONS
+## 1. TECHNICAL SPECIFICATIONS
 
-### 1.1 Hardware Stack
-| Component | Specification | ID / Type |
+### 1.1 Hardware Architecture
+| Component | Specification | Description |
 | :--- | :--- | :--- |
-| **MCU** | ATmega328P | Arduino Uno R3 |
-| **Connectivity** | Bluetooth 2.0/4.0 BLE | HC-05 / HM-10 |
-| **Visual Output** | Addressable RGB LED Ring | WS2812B (11-bit) |
-| **Audio Output** | Active Piezo Buzzer | 5V Logic |
-| **Power Supply** | USB Bus Power | 5V DC / 500mA |
+| **Microcontroller** | ATmega328P | Arduino Uno R3 Core |
+| **Connectivity** | Bluetooth 2.0/4.0 | HC-05 / HM-10 Module |
+| **Visual Output** | WS2812B RGB Ring | 11 Addressable Pixels |
+| **Audio Feedback**| Active Buzzer | 5V TTL Logic |
+| **Power Logic** | USB 5V | 500mA Bus Powered |
 
-### 1.2 Wiring Diagram (PINOUT)
-**CRITICAL:** Strict adherence to this pinout is required for firmware V3.0.0 compatibility.
+### 1.2 Wiring Interface (PINOUT)
+**Strict adherence to this configuration is mandatory for Firmware V3 compatibility:**
 
-| Component | Pin Function | Arduino Pin | Note |
-| :--- | :--- | :--- | :--- |
-| **BUZZER** | SIGNAL | **D2** | Active Low/High |
-| **LED RING** | DATA IN | **D3** | 11 Pixels Chain |
-| **BLUETOOTH** | STATE | **D4** | Connection Status |
-| **BLUETOOTH** | TXD | **D9** | Connect to BT RX |
-| **BLUETOOTH** | RXD | **D10** | Connect to BT TX |
-
----
-
-## 2. SOFTWARE ARCHITECTURE
-
-### 2.1 Communication Protocol
-The system uses a custom serial packet structure over Bluetooth UART at 9600 baud.
-
-* **Equalizer Mode (SYNC):**
-    * Command: `V` (Velocity)
-    * Payload: `0-11` (Integer representing active LEDs)
-    * *Latency: < 50ms*
-
-* **Comet Mode (LOADING):**
-    * Command: `L` (Loop)
-    * Payload: `NULL` (Triggers internal firmware animation)
-
-### 2.2 Web Interface Stack
-The client-side application is hosted via GitHub Pages and runs entirely in the browser.
-* **Core:** HTML5 / CSS3 (Industrial UI Design)
-* **Logic:** Vanilla JavaScript (ES6+)
-* **APIs Used:**
-    * `navigator.bluetooth` (BLE Connection Management)
-    * `AudioContext` (Real-time Frequency Analysis)
-    * `getDisplayMedia` (System Audio Stream Capture)
-
----
-
-## 3. OPERATIONAL MODES
-
-### [MODE A] AUDIO SYNC (Equalizer)
-Real-time audio visualization using Fast Fourier Transform (FFT).
-* **Function:** Captures system-wide audio via Web Audio API.
-* **Logic:** Computes average energy across low and mid frequency bands.
-* **Mapping:** Translates amplitude levels directly to the 0-11 LED scale.
-
-### [MODE B] COMET (Idle/Loading)
-Autonomous "heartbeat" animation for standby status.
-* **Pattern:** Single pixel rotation with sub-pixel interpolation (Anti-aliased tail).
-* **Aesthetic:** Minimalist "Processing" indicator.
-* **Default Color:** Terminal White / Cyber Cyan.
-
----
-
-## 4. VISUAL IDENTITY
-
-### 4.1 Color Palette
-The interface and hardware LEDs strictly follow this industrial color scheme:
-
-| Color | HEX Code | Usage |
+| Peripheral | Signal | Arduino Pin |
 | :--- | :--- | :--- |
-| **CRIMSON RED** | `#C70039` | Alerts / Peak Intensity / Bass |
-| **CYBER BLUE** | `#2196F3` | Interface / Idle State / Data Streams |
-| **VOID BLACK** | `#0a0a0a` | Background / PCB Aesthetic |
-| **TERMINAL WHITE**| `#E0E0E0` | Typography / Primary LED Output |
+| **BUZZER** | I/O SIGNAL | **D2** |
+| **LED RING** | DATA LINE | **D3** |
+| **BT MODULE** | STATE | **D4** |
+| **BT MODULE** | TXD (Transmit) | **D9** |
+| **BT MODULE** | RXD (Receive) | **D10** |
 
 ---
 
-## 5. DEPLOYMENT GUIDE
+## 2. OPERATIONAL LOGIC
 
-1.  **Firmware:** Flash the provided `.ino` file to the Arduino Uno.
-2.  **Hardware Check:** Verify wiring against the **PINOUT** table in section 1.2.
-3.  **BT Pairing:** Connect the Bluetooth module to your OS (Default code: 1234 or 0000).
-4.  **Launch:** Access the web controller via GitHub Pages URL.
-5.  **Initialize:** Click `[01. CONNECT DEVICE]` and select the paired unit.
+The system operates on a dual-mode communication protocol via Bluetooth UART at 9600 baud.
+
+* **SYNC MODE (Command: 'V'):** Real-time frequency-to-pixel mapping. Accepts integer values (0-11) to represent signal amplitude.
+* **LOADING MODE (Command: 'L'):** Triggers an autonomous "Comet" animation stored in the MCU firmware.
 
 ---
 
-**PROGRES:BEAT // UNIT_11**
-*Designed & Engineered by ARNEXE*
+## 3. DESIGN SYSTEM & IDENTITY
+
+### 3.1 Industrial Color Palette
+The artifact utilizes a specific color-coding system for data representation:
+* **CRIMSON RED (`#C70039`):** High-intensity signals, peaks, and system alerts.
+* **CYBER BLUE (`#2196F3`):** Connectivity status, idle data flow, and UI elements.
+* **TERMINAL WHITE (`#E0E0E0`):** Default state, secondary visualization, and typography.
+
+---
+
+## 4. FIRMWARE SOURCE CODE (V3.0)
+
+[Image of Arduino Uno with WS2812B LED ring and Bluetooth module wiring diagram]
+
+```cpp
+/*
+ * PROGRES:BEAT // UNIT_11 FIRMWARE
+ * REV: 3.0.0 // 2026-01-21
+ */
+
+#include <Adafruit_NeoPixel.h>
+#include <SoftwareSerial.h>
+
+#define LED_PIN    3
+#define BUZZER_PIN 2
+#define BT_RX      10
+#define BT_TX      9
+#define NUMPIXELS  11
+
+Adafruit_NeoPixel pixels(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
+SoftwareSerial BTSerial(BT_RX, BT_TX
